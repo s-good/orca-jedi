@@ -211,6 +211,7 @@ void State::zero() {
 double State::norm(const std::string & field_name) const {
   double norm = 0;
   int valid_points = 0;
+  double abs_max = 0;
 
   auto field_view = atlas::array::make_view<double, 2>(
       stateFields_[field_name]);
@@ -219,17 +220,31 @@ double State::norm(const std::string & field_name) const {
       geom_->mesh().nodes().ghost());
   atlas::field::MissingValue mv(stateFields()[field_name]);
   bool has_mv = static_cast<bool>(mv);
+
+  // calculate the maximum for more robust norm
   for (atlas::idx_t j = 0; j < field_view.shape(0); ++j) {
     for (atlas::idx_t k = 0; k < field_view.shape(1); ++k) {
       if (!ghost(j)) {
         if (!has_mv || (has_mv && !mv(field_view(j, k)))) {
-          norm += field_view(j, k)*field_view(j, k);
+          if (field_view(j, k) > abs_max) abs_max = abs(field_view(j, k));
+        }
+      }
+    }
+  }
+  if (abs_max == 0) abs_max = 1;
+
+  for (atlas::idx_t j = 0; j < field_view.shape(0); ++j) {
+    for (atlas::idx_t k = 0; k < field_view.shape(1); ++k) {
+      if (!ghost(j)) {
+        if (!has_mv || (has_mv && !mv(field_view(j, k)))) {
+          const double scaled = field_view(j, k) / abs_max;
+          norm += scaled*scaled;
           ++valid_points;
         }
       }
     }
   }
-  return sqrt(norm)/valid_points;
+  return abs_max * sqrt(norm)/valid_points;
 }
 
 }  // namespace orcamodel
