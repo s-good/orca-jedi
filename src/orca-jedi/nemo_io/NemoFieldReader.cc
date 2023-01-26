@@ -464,7 +464,8 @@ void NemoFieldReader::read_vertical_var(const std::string& varname,
 }
 
 void NemoFieldReader::read_vertical_var(const std::string& varname,
-    const atlas::Mesh& mesh, atlas::array::ArrayView<double, 2>& field_view) {
+    const atlas::Mesh& mesh, atlas::array::ArrayView<double, 2>& field_view,
+    const bool levelsAreTopDown) {
   oops::Log::trace() << "orcamodel::NemoFieldReader::read_vertical_var"
                      << std::endl;
   try {
@@ -499,6 +500,10 @@ void NemoFieldReader::read_vertical_var(const std::string& varname,
       err_stream << "orcamodel::NemoFieldReader::read_vertical_var ncVar '"
                  << varname << "' has " << n_dims << " dimensions.";
       throw eckit::BadValue(err_stream.str(), Here());
+    }
+
+    if (!levelsAreTopDown) {
+      std::reverse(buffer.begin(), buffer.end());
     }
 
     auto ghost = atlas::array::make_view<int32_t, 1>(mesh.nodes().ghost());
@@ -641,7 +646,8 @@ void NemoFieldReader::read_surf_var(const std::string& varname,
 
 void NemoFieldReader::read_volume_var(const std::string& varname,
     const atlas::Mesh& mesh, const size_t t_indx,
-    atlas::array::ArrayView<double, 2>& field_view) {
+    atlas::array::ArrayView<double, 2>& field_view,
+    const bool levelsAreTopDown) {
   try {
     size_t nx = read_dim_size("x");
     size_t ny = read_dim_size("y");
@@ -712,11 +718,21 @@ void NemoFieldReader::read_volume_var(const std::string& varname,
 
     // in atlas fields the levels indices change the fastest, so we need to
     // swap the indexing order from the netCDF data.
-    for (size_t inode = 0; inode < field_view.shape(0); ++inode) {
-      for (int k = 0; k < nlevels; ++k) {
-        if (ghost(inode)) continue;
-        field_view(inode, k) =
-          buffer[k*nx*ny + index_glbarray(ij(inode, 0), ij(inode, 1))];
+    if (levelsAreTopDown) {
+      for (size_t inode = 0; inode < field_view.shape(0); ++inode) {
+        for (int k = 0; k < nlevels; ++k) {
+          if (ghost(inode)) continue;
+          field_view(inode, k) =
+            buffer[k*nx*ny + index_glbarray(ij(inode, 0), ij(inode, 1))];
+        }
+      }
+    } else {
+      for (size_t inode = 0; inode < field_view.shape(0); ++inode) {
+        for (int k = 0; k < nlevels; ++k) {
+          if (ghost(inode)) continue;
+          field_view(inode, nlevels-1-k) =
+            buffer[k*nx*ny + index_glbarray(ij(inode, 0), ij(inode, 1))];
+        }
       }
     }
   } catch(netCDF::exceptions::NcException& e)

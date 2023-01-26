@@ -214,7 +214,6 @@ double State::norm(const std::string & field_name) const {
 
   auto field_view = atlas::array::make_view<double, 2>(
       stateFields_[field_name]);
-  oops::Log::trace() << "State(ORCA)::norm" << std::endl;
   auto ghost = atlas::array::make_view<int32_t, 1>(
       geom_->mesh().nodes().ghost());
   atlas::field::MissingValue mv(stateFields()[field_name]);

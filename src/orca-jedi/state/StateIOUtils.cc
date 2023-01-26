@@ -77,10 +77,11 @@ void readFieldsFromFile(
         if (varCoordTypeMap[fieldName] == "surface") {
           nemo_file.read_surf_var(nemoName, geom.mesh(), time_indx, field_view);
         } else if (varCoordTypeMap[fieldName] == "vertical") {
-          nemo_file.read_vertical_var(nemoName, geom.mesh(), field_view);
+          nemo_file.read_vertical_var(nemoName, geom.mesh(), field_view,
+              geom.levelsAreTopDown());
         } else {
           nemo_file.read_volume_var(nemoName, geom.mesh(), time_indx,
-              field_view);
+              field_view, geom.levelsAreTopDown());
         }
         auto missing_value = nemo_file.read_fillvalue<double>(nemoName);
         field.metadata().set("missing_value", missing_value);

@@ -40,6 +40,7 @@ class OrcaGeometryParameters : public oops::Parameters {
   oops::RequiredParameter<int> nLevels {"number levels", this};
   oops::OptionalParameter<int> sourceMeshHalo {"source mesh halo", this};
   oops::OptionalParameter<std::string> partitioner {"partitioner", this};
+  oops::OptionalParameter<bool> levelsAreTopDown {"top down levels", this};
 };
 
 }  //  namespace orcamodel

@@ -67,8 +67,8 @@ class Geometry : public util::Printable {
   const std::string nemo_var_name(const std::string std_name) const;
   const bool variable_in_variable_type(std::string variable_name,
     std::string variable_type) const;
-///brief A misnomer - should be called isDescending
-  bool levelsAreTopDown() const {return false;}
+  bool levelsAreTopDown() const {
+    return params_.levelsAreTopDown.value().value_or(true);}
   std::string distributionType() const {
       return params_.partitioner.value().value_or("serial");}
 

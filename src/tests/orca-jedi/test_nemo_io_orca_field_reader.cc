@@ -72,13 +72,18 @@ CASE("test parallel serially distributed reads field array view") {
                           atlas::option::name("votemper") |
                           atlas::option::levels(3)));
     auto field_view = atlas::array::make_view<double, 2>(field);
+    atlas::Field field_reverse(funcSpace.createField<double>(
+                          atlas::option::name("votemper") |
+                          atlas::option::levels(3)));
+    auto field_reverse_view = atlas::array::make_view<double, 2>(field_reverse);
 
     field_reader.read_volume_var("votemper", mesh, 0, field_view);
+    field_reader.read_volume_var("votemper", mesh, 0, field_reverse_view, false);
     auto ij = atlas::array::make_view<int32_t, 2>(mesh.nodes().field("ij"));
 
     auto ghost = atlas::array::make_view<int32_t, 1>(mesh.nodes().ghost());
     std::vector<double> raw_data;
-    for (int k =0; k <3; k++) {
+    for (int k = 0; k < 3; k++) {
       raw_data = field_reader.read_var_slice("votemper", 0, k);
       for (int i = 0; i < field_view.shape(0); ++i) {
         if (ghost(i)) continue;
@@ -90,6 +95,7 @@ CASE("test parallel serially distributed reads field array view") {
                       << " with mesh " << field_view(i, k) << std::endl;
         }
         EXPECT_EQUAL(raw_data[i], field_view(i, k));
+        EXPECT_EQUAL(raw_data[i], field_reverse_view(i, 2-k));
       }
     }
   }
@@ -99,8 +105,13 @@ CASE("test parallel serially distributed reads field array view") {
                           atlas::option::name("depth") |
                           atlas::option::levels(3)));
     auto field_view = atlas::array::make_view<double, 2>(field);
+    atlas::Field field_reverse(funcSpace.createField<double>(
+                          atlas::option::name("depth") |
+                          atlas::option::levels(3)));
+    auto field_reverse_view = atlas::array::make_view<double, 2>(field_reverse);
 
     field_reader.read_vertical_var("nav_lev", mesh, field_view);
+    field_reader.read_vertical_var("nav_lev", mesh, field_reverse_view, false);
     auto ij = atlas::array::make_view<int32_t, 2>(mesh.nodes().field("ij"));
 
     auto ghost = atlas::array::make_view<int32_t, 1>(mesh.nodes().ghost());
@@ -116,6 +127,7 @@ CASE("test parallel serially distributed reads field array view") {
                       << " with mesh " << field_view(i, k) << std::endl;
         }
         EXPECT_EQUAL(levels[k], field_view(i, k));
+        EXPECT_EQUAL(levels[k], field_reverse_view(i, 2-k));
       }
     }
   }
