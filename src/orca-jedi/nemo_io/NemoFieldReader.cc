@@ -506,6 +506,16 @@ void NemoFieldReader::read_vertical_var(const std::string& varname,
       std::reverse(buffer.begin(), buffer.end());
     }
 
+    for (int k = 0; k < nlevels; ++k) {
+      oops::Log::debug() << "depth[" << k << "]: " << buffer[k] << std::endl;
+      if (k == 0) continue;
+      if (levelsAreTopDown && (buffer[k] < buffer[k-1])) {
+        throw eckit::BadValue("levels are top down but depth is decreasing", Here());
+      } else if (!levelsAreTopDown && (buffer[k] > buffer[k-1])) {
+        throw eckit::BadValue("levels are bottom up but depth is increasing", Here());
+      }
+    }
+
     auto ghost = atlas::array::make_view<int32_t, 1>(mesh.nodes().ghost());
     // Store the data in an atlas 3D field - inefficient but flexible
     for (size_t inode = 0; inode < field_view.shape(0); ++inode) {
