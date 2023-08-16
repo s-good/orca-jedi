@@ -243,20 +243,20 @@ template double NemoFieldReader::read_fillvalue<double>(
 /// to a target datetime.
 size_t NemoFieldReader::get_nearest_datetime_index(
     const util::DateTime& tgt_datetime) {
-  int64_t time_diff = INT64_MAX;
+  const int64_t kSecondsTol = 60;
+  int64_t timeDifference = INT64_MAX;
   size_t indx = 0;
   util::Duration duration;
   bool datetimeMatch = false;
-  const kSecondsTol = 60;
 
   for (size_t i=0; i < datetimes_.size(); ++i) {
     duration = datetimes_[i] - tgt_datetime;
-    if (std::abs(duration.toSeconds()) < time_diff) {
-      time_diff = std::abs(duration.toSeconds());
+    if (std::abs(duration.toSeconds()) < timeDifference) {
+      timeDifference = std::abs(duration.toSeconds());
       indx = i;
-    }
-    if (duration.toSeconds() <= kSecondsTol) {
-      datetimeMatch = true
+      if (timeDifference <= kSecondsTol) {
+        datetimeMatch = true;
+      }
     }
   }
 
