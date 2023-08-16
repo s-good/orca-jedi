@@ -17,6 +17,7 @@
 #include <map>
 
 #include "atlas/parallel/omp/omp.h"
+#include "atlas/parallel/mpi/mpi.h"
 
 #include "eckit/exception/Exceptions.h"
 
@@ -245,13 +246,24 @@ size_t NemoFieldReader::get_nearest_datetime_index(
   int64_t time_diff = INT64_MAX;
   size_t indx = 0;
   util::Duration duration;
+  bool datetimeMatch = false;
+  const kSecondsTol = 60;
 
   for (size_t i=0; i < datetimes_.size(); ++i) {
     duration = datetimes_[i] - tgt_datetime;
-    if ( std::abs(duration.toSeconds()) < time_diff ) {
+    if (std::abs(duration.toSeconds()) < time_diff) {
       time_diff = std::abs(duration.toSeconds());
       indx = i;
     }
+    if (duration.toSeconds() <= kSecondsTol) {
+      datetimeMatch = true
+    }
+  }
+
+  if (!datetimeMatch && mpi::rank() == 0) {
+      std::cout << "WARNING: orcamodel::NemoFieldReader::get_nearest_datetime_index("
+                << tgt_datetime << ") does not exactly match a time in the file."
+                << " Minimum time difference is " << duration.toString() << std::endl;
   }
 
   return indx;
