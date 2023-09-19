@@ -74,9 +74,9 @@ class Interpolator : public util::Printable,
 
  private:
   void print(std::ostream &) const override;
-  int64_t nlocs_;
-  atlas::functionspace::PointCloud atlasObsFuncSpace_;
-  atlas::Interpolation interpolator_;
+  size_t nlocs_;
+  std::unique_ptr<atlas::functionspace::PointCloud> atlasObsFuncSpace_;
+  std::unique_ptr<atlas::Interpolation> interpolator_;
   // Parameters_ params_;
   OrcaInterpolatorParameters params_;
   const eckit::mpi::Comm & comm_;

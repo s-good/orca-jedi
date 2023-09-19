@@ -630,10 +630,28 @@ void NemoFieldReader::read_surf_var(const std::string& varname,
         }
 
         for (size_t inode = 0; inode < field_view.size(); ++inode) {
-          if (ghost(inode)) continue;
+          if (inode == 1054102) {
+            if (ghost(inode)) {
+              std::cout << "1054102 is ghost" << std::endl;
+            } else {
+              std::cout << "1054102 is not ghost" << std::endl;
+            }
+          }
+          // if (ghost(inode)) continue;
           double data = var_data[index_glbarray(ij(inode, 0), ij(inode, 1))];
           field_view(inode, 0) = data;
+          if (inode == 1054102) {
+            std::cout << "field_view(" << inode << ", 0) " << field_view(inode, 0)
+                      << " data " << data << std::endl;
+          }
         }
+        std::cout << "read_surf_var " << varname << " n_dims " << n_dims
+                  << " time index " << t_indx
+                  << " nx " << nx << " ny " << ny << " glbarray(ij(1054102, 0), ij(1054102, 1)) "
+                  << index_glbarray(ij(1054102, 0), ij(1054102, 1))
+                  << " ghost(1054102) " << ghost(1054102)
+                  << " var_data[1054102] " << var_data[1054102]
+                  << " field_view(1054102, 0) " << field_view(1054102, 0) << std::endl;
     }
     catch (netCDF::exceptions::NcException& e) {
         throw eckit::FailedLibraryCall("NetCDF",

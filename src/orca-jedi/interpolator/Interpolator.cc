@@ -70,10 +70,8 @@ namespace orcamodel {
       const Geometry & geom, const std::vector<double>& lats,
       const std::vector<double>& lons) :
       nlocs_(lats.size()),
-      atlasObsFuncSpace_(atlasObsFuncSpaceFactory(lats, lons)),
-      interpolator_(eckit::LocalConfiguration(conf, "atlas-interpolator"),
-                    geom.functionSpace(),
-                    atlasObsFuncSpace_),
+      atlasObsFuncSpace_(nullptr),
+      interpolator_(nullptr),
       comm_(geom.getComm()) {
     params_.validateAndDeserialize(conf);
     oops::Log::trace() << "orcamodel::Interpolator:: conf:" << conf
@@ -81,6 +79,12 @@ namespace orcamodel {
     if (nlocs_ == 0) {
       oops::Log::trace() << "orcamodel::Interpolator:: nlocs == 0" << std::endl;
     }
+    atlasObsFuncSpace_ = std::make_unique<atlas::functionspace::PointCloud>(
+                          atlasObsFuncSpaceFactory(lats, lons));
+    interpolator_ = std::make_unique<atlas::Interpolation>(
+                      eckit::LocalConfiguration(conf, "atlas-interpolator"),
+                      geom.functionSpace(),
+                      (*atlasObsFuncSpace_));
   }
 
   void Interpolator::apply(const oops::Variables& vars, const State& state,
@@ -120,15 +124,17 @@ namespace orcamodel {
     std::size_t out_idx = 0;
     for (size_t jvar=0; jvar < nvars; ++jvar) {
       auto gv_varname = vars[jvar];
-      atlas::Field tgt_field = atlasObsFuncSpace_.createField<double>(
+      atlas::Field tgt_field = atlasObsFuncSpace_->createField<double>(
           atlas::option::name(gv_varname) |
           atlas::option::levels(varSizes[jvar]));
-      interpolator_.execute(state.stateFields()[gv_varname], tgt_field);
+      interpolator_->execute(state.stateFields()[gv_varname], tgt_field);
       auto field_view = atlas::array::make_view<double, 2>(tgt_field);
       atlas::field::MissingValue mv(state.stateFields()[gv_varname]);
       bool has_mv = static_cast<bool>(mv);
       for (std::size_t klev=0; klev < varSizes[jvar]; ++klev) {
         for (std::size_t iloc=0; iloc < nlocs_; iloc++) {
+          oops::Log::debug() << classname() << " field_view(" << iloc << ", " << klev
+                             << ") = " << field_view(iloc, klev) << std::endl;
           if (has_mv && mv(field_view(iloc, klev))) {
             result[out_idx] = util::missingValue(result[out_idx]);
           } else {
@@ -143,9 +149,9 @@ namespace orcamodel {
   }
 
   void Interpolator::print(std::ostream & os) const {
-    os << "orcamodel::Interpolator: " << std::endl;
-    os << "  Obs function space " << atlasObsFuncSpace_ << std::endl;
-    os << "  Interpolator " << interpolator_ << std::endl;
+    os << classname() << " " << std::endl;
+    os << "  Obs function space " << (*atlasObsFuncSpace_) << std::endl;
+    os << "  Interpolator " << (*interpolator_) << std::endl;
   }
 
 }  // namespace orcamodel

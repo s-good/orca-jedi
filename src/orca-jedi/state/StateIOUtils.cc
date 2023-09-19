@@ -76,6 +76,8 @@ void readFieldsFromFile(
         auto field_view = atlas::array::make_view<double, 2>(field);
         if (varCoordTypeMap[fieldName] == "surface") {
           nemo_file.read_surf_var(nemoName, geom.mesh(), time_indx, field_view);
+          std::cout << "state IO after read " << nemoName << " time index " << time_indx << std::endl;
+          std::cout << "field_view(1054102, 0) " << field_view(1054102, 0) << std::endl;
         } else if (varCoordTypeMap[fieldName] == "vertical") {
           nemo_file.read_vertical_var(nemoName, geom.mesh(), field_view);
         } else {
@@ -86,9 +88,9 @@ void readFieldsFromFile(
         field.metadata().set("missing_value", missing_value);
         field.metadata().set("missing_value_type", "approximately-equals");
         field.metadata().set("missing_value_epsilon", NEMO_FILL_TOL);
-        // Add a halo exchange following read to fill out halo points
-        geom.functionSpace().haloExchange(field);
       }
+      // Add a halo exchange following read to fill out halo points
+      fs.haloExchange();
     }
 
     oops::Log::trace() << "orcamodel::readFieldsFromFile:: readFieldsFromFile "
