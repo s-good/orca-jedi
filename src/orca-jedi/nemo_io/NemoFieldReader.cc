@@ -12,8 +12,10 @@
 #include <sstream>
 #include <limits>
 #include <map>
+#include <chrono>
 
 #include "atlas/parallel/omp/omp.h"
+#include "atlas/parallel/mpi/mpi.h"
 
 #include "eckit/exception/Exceptions.h"
 
@@ -698,6 +700,8 @@ void NemoFieldReader::read_volume_var(const std::string& varname,
 
     size_t n_dims = nc_var.getDimCount();
     std::string first_dim_name = nc_var.getDim(0).getName();
+
+    auto start = std::chrono::system_clock::now();
     if (n_dims == 4) {
       nc_var.getVar({t_indx, 0, 0, 0}, {1, nlevels, ny, nx}, buffer.data());
     } else if (n_dims == 3 && first_dim_name == z_dimvar_name_) {
@@ -708,7 +712,11 @@ void NemoFieldReader::read_volume_var(const std::string& varname,
                  << varname << "' has " << n_dims << " dimensions.";
       throw eckit::BadValue(err_stream.str(), Here());
     }
+    auto end = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapsed_seconds = end - start;
+    std::cout << "[" << atlas::mpi::rank() << "] read " << varname << " takes: " << std::to_string(elapsed_seconds.count()) << std::endl;
 
+    start = std::chrono::system_clock::now();
     // in atlas fields the levels indices change the fastest, so we need to
     // swap the indexing order from the netCDF data.
     const size_t numNodes = field_view.shape(0);
@@ -719,6 +727,9 @@ void NemoFieldReader::read_volume_var(const std::string& varname,
           buffer[k*nx*ny + index_glbarray(ij(inode, 0), ij(inode, 1))];
       }
     }
+    end = std::chrono::system_clock::now();
+    elapsed_seconds = end - start;
+    std::cout << "[" << atlas::mpi::rank() << "] transpose " << varname << " takes: " << std::to_string(elapsed_seconds.count()) << std::endl;
   } catch(netCDF::exceptions::NcException& e)
   {
     std::ostringstream err_stream;
