@@ -17,6 +17,7 @@
 #include "atlas/interpolation.h"
 #include "atlas/functionspace.h"
 #include "atlas/field/MissingValue.h"
+#include "atlas/parallel/omp/omp.h"
 
 #include "oops/util/DateTime.h"
 #include "oops/util/Logger.h"
@@ -116,15 +117,18 @@ namespace orcamodel {
 
     std::size_t out_idx = 0;
     for (size_t jvar=0; jvar < nvars; ++jvar) {
+      auto start = std::chrono::system_clock::now();
       auto gv_varname = vars[jvar];
       atlas::Field tgt_field = atlasObsFuncSpace_.createField<double>(
           atlas::option::name(gv_varname) |
           atlas::option::levels(varSizes[jvar]));
       interpolator_.execute(state.stateFields()[gv_varname], tgt_field);
+      auto end = std::chrono::system_clock::now();
+      std::chrono::duration<double> elapsed_seconds_atlas_apply = end - start;
       auto field_view = atlas::array::make_view<double, 2>(tgt_field);
       atlas::field::MissingValue mv(state.stateFields()[gv_varname]);
       bool has_mv = static_cast<bool>(mv);
-      for (std::size_t klev=0; klev < varSizes[jvar]; ++klev) {
+      atlas_omp_for (std::size_t klev=0; klev < varSizes[jvar]; ++klev) {
         for (std::size_t iloc=0; iloc < nlocs_; iloc++) {
           if (has_mv && mv(field_view(iloc, klev))) {
             result[out_idx] = util::missingValue<double>();
@@ -134,6 +138,11 @@ namespace orcamodel {
           ++out_idx;
         }
       }
+      std::chrono::duration<double> elapsed_seconds_fill_and_apply = end - start;
+      std::cout << "[" << atlas::mpi::rank() << "] fill and apply " << gv_varname
+                << " takes: " << std::to_string(elapsed_seconds_fill_and_apply.count())
+                << " fill used: " << std::to_string(elapsed_seconds_atlas_apply.count()/elapsed_seconds_fill_and_apply.count())
+                << std::endl;
     }
     oops::Log::trace() << "orcamodel::Interpolator::apply done "
                        << std::endl;
