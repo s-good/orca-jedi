@@ -8,6 +8,7 @@ list( APPEND oops_orcamodel_src_files
 errorcovariance/ErrorCovariance.cc
 errorcovariance/ErrorCovariance.h
 geometry/GeometryParameters.h
+geometry/IODataExchanger.h
 geometry/Geometry.h
 geometry/Geometry.cc
 interpolator/InterpolatorParameters.h

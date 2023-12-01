@@ -25,6 +25,13 @@ ecbuild_add_test( TARGET  test_orcajedi_nemo_io_orca_field_reader.x
                   CONDITION  eckit_HAVE_MPI
                   LIBS    orcamodel )
 
+ecbuild_add_test( TARGET  test_orcajedi_IODataExchanger.x
+                  SOURCES test_IODataExchanger.cc
+                  ENVIRONMENT ${ATLAS_TEST_ENVIRONMENT}
+                  MPI        2
+                  CONDITION  eckit_HAVE_MPI
+                  LIBS    orcamodel )
+
 ecbuild_add_test( TARGET  test_orcajedi_geometry.x
                   SOURCES test_geometry.cc
                   ENVIRONMENT ${ATLAS_TEST_ENVIRONMENT}

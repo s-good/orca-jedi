@@ -724,7 +724,7 @@ void NemoFieldReader::read_volume_var(const std::string& varname,
       std::cout << "[" << atlas::mpi::rank() << "] read " << varname << " level " << k << " takes: " << std::to_string(elapsed_seconds.count()) << std::endl;
       start = std::chrono::system_clock::now();
       for (size_t inode = 0; inode < numNodes; ++inode) {
-        if (ghost(inode)) continue;
+        //if (ghost(inode)) continue;
         field_view(inode, k) =
           buffer[index_glbarray(ij(inode, 0), ij(inode, 1))];
       }

@@ -8,6 +8,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <memory>
 
 #include "atlas/field/Field.h"
 #include "atlas/field/FieldSet.h"
@@ -27,6 +28,7 @@
 #include "oops/util/Printable.h"
 
 #include "orca-jedi/geometry/GeometryParameters.h"
+#include "orca-jedi/geometry/IODataExchanger.h"
 
 namespace atlas {
   class Field;
@@ -77,6 +79,7 @@ class Geometry : public util::Printable {
   atlas::Mesh mesh_;
   atlas::functionspace::NodeColumns funcSpace_;
   atlas::FieldSet nofields_;
+  IODataExchanger exchanger_;
 };
 // -----------------------------------------------------------------------------
 

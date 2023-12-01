@@ -44,7 +44,8 @@ Geometry::Geometry(const eckit::Configuration & config,
                    const eckit::mpi::Comm & comm) :
                       comm_(comm), vars_(orcaVariableFactory(config)),
                       n_levels_(config.getInt("number levels")),
-                      grid_(config.getString("grid name"))
+                      grid_(config.getString("grid name")),
+                      exchanger_(grid_, n_levels_)
 {
     params_.validateAndDeserialize(config);
     int64_t halo = params_.sourceMeshHalo.value().value_or(0);
