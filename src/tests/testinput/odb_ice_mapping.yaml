@@ -893,11 +893,11 @@ varno-dependent columns:
         varno: 293
       - name: "deep_convective_base_height"
         varno: 294
-  # Map initial_obsvalue at varno 235 to MetaData/air_pressure rather than ObsValue/air_pressure
+  # Map initial_obsvalue at varno 235 to MetaData/air_pressure_at_interface rather than ObsValue/air_pressure_at_interface
   - source: "initial_obsvalue"
     group name: "MetaData"
     varno-to-variable-name mapping:
-      - name: "air_pressure"
+      - name: "air_pressure_at_interface"
         varno: 235
   - source: "obs_error"
     group name: "ObsError"
